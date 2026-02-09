@@ -9,14 +9,14 @@ services:
       - "2222:2222"  # SSH honeypot
       - "2223:2223"  # Telnet honeypot
     volumes:
-      # Mount cowrie configuration
-      - ./cowrie-config/cowrie.cfg:/cowrie/cowrie.cfg:ro
+      # Mount cowrie configuration to etc directory
+      - ./cowrie-config/cowrie.cfg:/cowrie/cowrie-git/etc/cowrie.cfg:ro
       # Persist cowrie logs (shared with Promtail)
-      - cowrie-logs:/cowrie/var/log/cowrie
+      - cowrie-logs:/cowrie/cowrie-git/var/log/cowrie
       # Persist downloaded files from attackers
-      - cowrie-downloads:/cowrie/var/lib/cowrie/downloads
+      - cowrie-downloads:/cowrie/cowrie-git/var/lib/cowrie/downloads
       # Persist TTY recordings
-      - cowrie-tty:/cowrie/var/lib/cowrie/tty
+      - cowrie-tty:/cowrie/cowrie-git/var/lib/cowrie/tty
     networks:
       - monitoring
     environment:
