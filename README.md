@@ -87,13 +87,6 @@ docker-compose logs -f
 docker-compose ps
 ```
 
-**Note**: The first time you start Cowrie, the entrypoint script will automatically copy required data files (`cmdoutput.json`, `fs.pickle`, etc.) from the source directory to the share directory. This process is necessary for Cowrie to function properly.
-
-You can verify the initialization by checking the logs:
-```bash
-docker-compose logs cowrie | grep "Initialization"
-```
-
 ### Step 3: Access Services
 
 - **Grafana**: http://localhost:3000 (default credentials: admin/admin)

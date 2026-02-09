@@ -15,46 +15,42 @@ FileNotFoundError: [Errno 2] No such file or directory: '/cowrie/cowrie-git/shar
 
 **Root Cause**: 
 - Cowrie version 2.6.0+ moved data files from `share/cowrie` to `src/cowrie/data`
-- The configuration still references the old `share/cowrie` location
-- Required files (`cmdoutput.json`, `fs.pickle`) need to be copied to `share/cowrie`
+- Old configuration files may reference the old `share/cowrie` location
+- The configuration needs to use the default paths or explicitly point to `src/cowrie/data`
 
 **Solution**:
-This project includes an entrypoint script (`cowrie-entrypoint.sh`) that automatically copies required data files on startup. The script:
-- Creates the `share/cowrie` directory structure
-- Copies `cmdoutput.json` from `src/cowrie/data` to `share/cowrie`
-- Copies `fs.pickle` for the filesystem
-- Copies `txtcmds` directory with command outputs
-- Only copies files if they don't exist or if the source is newer
+Remove the `[shell]` section from your `cowrie.cfg` file to use Cowrie's defaults, which correctly point to `src/cowrie/data` where the files exist. The default configuration automatically uses the correct paths.
+
+**What Changed**:
+- Removed explicit `filesystem` and `processes` paths from config
+- Cowrie now uses its default paths: `src/cowrie/data/fs.pickle` and `src/cowrie/data/cmdoutput.json`
+- No entrypoint script or file copying needed
 
 **Verification**:
 ```bash
-# Check if files were copied correctly
-docker-compose exec cowrie ls -la /cowrie/cowrie-git/share/cowrie/
+# Check if Cowrie started successfully
+docker-compose logs cowrie | grep -E "(Starting factory|Ready to accept)"
 
 # You should see:
-# - cmdoutput.json
-# - fs.pickle
-# - txtcmds/
-# - arch/ (if available)
+# Starting factory <cowrie.ssh.factory.CowrieSSHFactory...>
+# Ready to accept SSH connections
+# Starting factory <cowrie.telnet.factory.HoneyPotTelnetFactory...>
+# Ready to accept Telnet connections
 
-# Check entrypoint logs
-docker-compose logs cowrie | grep -A 20 "Initialization"
+# Test SSH connection
+ssh -p 2222 root@localhost
+# (Should prompt for password)
 ```
 
-**Manual Fix** (if entrypoint doesn't work):
-```bash
-# Enter the container
-docker-compose exec cowrie bash
+**Alternative Fix** (if you need custom paths):
+If you need to specify custom paths, use Cowrie's `data_path` configuration option:
+```ini
+[honeypot]
+data_path = src/cowrie/data
 
-# Copy required files manually
-mkdir -p /cowrie/cowrie-git/share/cowrie
-cp /cowrie/cowrie-git/src/cowrie/data/cmdoutput.json /cowrie/cowrie-git/share/cowrie/
-cp /cowrie/cowrie-git/src/cowrie/data/fs.pickle /cowrie/cowrie-git/share/cowrie/
-cp -r /cowrie/cowrie-git/src/cowrie/data/txtcmds /cowrie/cowrie-git/share/cowrie/
-
-# Restart container
-exit
-docker-compose restart cowrie
+[shell]
+filesystem = ${honeypot:data_path}/fs.pickle
+processes = ${honeypot:data_path}/cmdoutput.json
 ```
 
 ### 2. Services Not Starting
