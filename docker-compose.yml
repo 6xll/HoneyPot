@@ -1,0 +1,123 @@
+services:
+  # Cowrie SSH/Telnet Honeypot
+  cowrie:
+    image: cowrie/cowrie:latest
+    container_name: cowrie
+    hostname: honeypot
+    restart: unless-stopped
+    ports:
+      - "2222:2222"  # SSH honeypot
+      - "2223:2223"  # Telnet honeypot
+    volumes:
+      # Mount cowrie configuration
+      - ./cowrie-config/cowrie.cfg:/cowrie/cowrie.cfg:ro
+      # Persist cowrie logs (shared with Promtail)
+      - cowrie-logs:/cowrie/var/log/cowrie
+      # Persist downloaded files from attackers
+      - cowrie-downloads:/cowrie/var/lib/cowrie/downloads
+      # Persist TTY recordings
+      - cowrie-tty:/cowrie/var/lib/cowrie/tty
+    networks:
+      - monitoring
+    environment:
+      # Cowrie configuration can be overridden via environment variables
+      - COWRIE_JSON_ENABLED=yes
+      - COWRIE_JSON_LOG=/cowrie/var/log/cowrie/cowrie.json
+    healthcheck:
+      test: ["CMD", "nc", "-z", "localhost", "2222"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+
+  # Promtail - Log Collector
+  promtail:
+    image: grafana/promtail:2.9.3
+    container_name: promtail
+    restart: unless-stopped
+    volumes:
+      # Mount promtail configuration
+      - ./promtail-config.yaml:/etc/promtail/config.yml:ro
+      # Access to Cowrie logs
+      - cowrie-logs:/var/log/cowrie:ro
+    command: -config.file=/etc/promtail/config.yml
+    networks:
+      - monitoring
+    depends_on:
+      - victorialogs
+      - cowrie
+
+  # VictoriaLogs - Log Storage Backend
+  victorialogs:
+    image: victoriametrics/victoria-logs:v0.5.0-victorialogs
+    container_name: victorialogs
+    restart: unless-stopped
+    ports:
+      - "9428:9428"  # HTTP API
+    volumes:
+      # Persist VictoriaLogs data
+      - victorialogs-data:/victoria-logs-data
+    command:
+      - '--storageDataPath=/victoria-logs-data'
+      - '--httpListenAddr=:9428'
+      - '--retentionPeriod=30d'  # Keep logs for 30 days
+    networks:
+      - monitoring
+    healthcheck:
+      test: ["CMD", "wget", "--spider", "-q", "http://localhost:9428/health"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+
+  # Grafana - Visualization Platform
+  grafana:
+    image: grafana/grafana:10.2.3
+    container_name: grafana
+    restart: unless-stopped
+    ports:
+      - "3000:3000"  # Grafana UI
+    volumes:
+      # Persist Grafana data (dashboards, users, etc.)
+      - grafana-data:/var/lib/grafana
+      # Provisioning - automatically configure datasources
+      - ./grafana/provisioning:/etc/grafana/provisioning:ro
+      # Custom dashboards (optional)
+      - ./grafana/dashboards:/var/lib/grafana/dashboards:ro
+    environment:
+      # Grafana configuration
+      - GF_SECURITY_ADMIN_USER=admin
+      - GF_SECURITY_ADMIN_PASSWORD=admin
+      - GF_USERS_ALLOW_SIGN_UP=false
+      - GF_SERVER_ROOT_URL=http://localhost:3000
+      # Enable anonymous access for easy demo (disable in production)
+      - GF_AUTH_ANONYMOUS_ENABLED=false
+      # Logging
+      - GF_LOG_LEVEL=info
+    networks:
+      - monitoring
+    depends_on:
+      - victorialogs
+    healthcheck:
+      test: ["CMD", "wget", "--spider", "-q", "http://localhost:3000/api/health"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+
+networks:
+  monitoring:
+    driver: bridge
+    name: honeypot-monitoring
+
+volumes:
+  # Cowrie data volumes
+  cowrie-logs:
+    name: cowrie-logs
+  cowrie-downloads:
+    name: cowrie-downloads
+  cowrie-tty:
+    name: cowrie-tty
+  # VictoriaLogs data
+  victorialogs-data:
+    name: victorialogs-data
+  # Grafana data
+  grafana-data:
+    name: grafana-data

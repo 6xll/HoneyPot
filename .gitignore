@@ -1,0 +1,53 @@
+# Docker volumes and data
+*.log
+*.pid
+
+# Cowrie runtime data
+cowrie/var/
+cowrie/*.pyc
+cowrie/__pycache__/
+cowrie/.venv/
+
+# Python
+*.py[cod]
+*$py.class
+*.so
+.Python
+build/
+develop-eggs/
+dist/
+downloads/
+eggs/
+.eggs/
+lib/
+lib64/
+parts/
+sdist/
+var/
+wheels/
+*.egg-info/
+.installed.cfg
+*.egg
+
+# Virtual environments
+venv/
+ENV/
+env/
+
+# IDE
+.vscode/
+.idea/
+*.swp
+*.swo
+*~
+
+# OS
+.DS_Store
+Thumbs.db
+
+# Temporary files
+/tmp/
+*.tmp
+
+# Grafana runtime
+grafana/grafana.db
