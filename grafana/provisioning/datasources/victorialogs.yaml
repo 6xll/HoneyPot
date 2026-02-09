@@ -22,7 +22,7 @@ datasources:
   - name: VictoriaLogs-Loki
     type: loki
     access: proxy
-    url: http://victorialogs:9428/select/logsql
+    url: http://victorialogs:9428
     isDefault: false
     editable: true
     jsonData:
