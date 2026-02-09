@@ -1,0 +1,111 @@
+server:
+  http_listen_port: 9080
+  grpc_listen_port: 0
+
+# Position tracking to avoid re-reading logs
+positions:
+  filename: /tmp/positions.yaml
+
+# Clients configuration - where to send logs
+clients:
+  - url: http://victorialogs:9428/insert/loki/api/v1/push
+
+# Scrape configurations
+scrape_configs:
+  # Cowrie JSON logs scraper
+  - job_name: cowrie
+    static_configs:
+      - targets:
+          - localhost
+        labels:
+          job: cowrie
+          instance: honeypot
+          __path__: /var/log/cowrie/cowrie.json
+
+    # Pipeline stages for processing logs
+    pipeline_stages:
+      # Parse JSON log entries
+      - json:
+          expressions:
+            # Extract timestamp
+            timestamp: timestamp
+            # Extract event ID (type of event)
+            eventid: eventid
+            # Extract source IP address
+            src_ip: src_ip
+            # Extract commands/input from attacker
+            input: input
+            # Extract session ID
+            session: session
+            # Extract message
+            message: message
+            # Extract username (for login attempts)
+            username: username
+            # Extract password (for login attempts)
+            password: password
+            # Extract protocol (SSH/Telnet)
+            protocol: protocol
+            # Extract destination IP
+            dst_ip: dst_ip
+            # Extract destination port
+            dst_port: dst_port
+            # Extract source port
+            src_port: src_port
+            # Extract sensor name
+            sensor: sensor
+            # Extract SSH version
+            version: version
+            # Extract duration
+            duration: duration
+
+      # Add extracted fields as labels for easy filtering
+      - labels:
+          eventid:
+          src_ip:
+          session:
+          protocol:
+          sensor:
+
+      # Format timestamp to RFC3339 for VictoriaLogs
+      - timestamp:
+          source: timestamp
+          format: RFC3339Nano
+
+      # Create a formatted message if original message is empty
+      - template:
+          source: message
+          template: '{{ if .message }}{{ .message }}{{ else }}{{ .eventid }}{{ if .src_ip }} from {{ .src_ip }}{{ end }}{{ if .input }}: {{ .input }}{{ end }}{{ end }}'
+
+      # Add metadata labels
+      - labels:
+          input:
+          username:
+          password:
+
+      # Output stage - send to VictoriaLogs
+      - output:
+          source: message
+
+# Optional: Additional scrape config for Cowrie's text logs (if needed)
+  - job_name: cowrie-text
+    static_configs:
+      - targets:
+          - localhost
+        labels:
+          job: cowrie-text
+          instance: honeypot
+          __path__: /var/log/cowrie/cowrie.log
+
+    pipeline_stages:
+      - regex:
+          expression: '^\[(?P<timestamp>.*?)\].*?(?P<level>\w+):.*?(?P<message>.*)$'
+
+      - labels:
+          level:
+
+      - timestamp:
+          source: timestamp
+          format: '2006-01-02T15:04:05-0700'
+
+      - output:
+          source: message

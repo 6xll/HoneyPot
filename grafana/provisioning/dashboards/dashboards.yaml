@@ -1,0 +1,14 @@
+apiVersion: 1
+
+providers:
+  # Dashboard provider for loading dashboards from filesystem
+  - name: 'Cowrie Honeypot Dashboards'
+    orgId: 1
+    folder: 'Honeypot'
+    type: file
+    disableDeletion: false
+    updateIntervalSeconds: 10
+    allowUiUpdates: true
+    options:
+      path: /var/lib/grafana/dashboards
+      foldersFromFilesStructure: true
