@@ -6,14 +6,12 @@ datasources:
     type: prometheus
     access: proxy
     url: http://victorialogs:9428/select/logsql
-    isDefault: true
+    isDefault: false  # Changed to false
     editable: true
     jsonData:
       httpMethod: POST
-      # VictoriaLogs supports LogsQL which is similar to Prometheus
       timeInterval: 30s
       queryTimeout: 60s
-      # Custom HTTP headers for VictoriaLogs
       customQueryParameters: ''
     version: 1
     uid: victorialogs-uid
@@ -23,11 +21,10 @@ datasources:
     type: loki
     access: proxy
     url: http://victorialogs:9428
-    isDefault: false
+    isDefault: true  # This is the default
     editable: true
     jsonData:
       maxLines: 1000
-      # VictoriaLogs can be queried like Loki
       derivedFields: []
     version: 1
     uid: victorialogs-loki-uid

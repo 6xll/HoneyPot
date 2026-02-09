@@ -1,9 +1,8 @@
 services:
-  # Cowrie SSH/Telnet Honeypot
+  # Cowrie Honeypot
   cowrie:
     image: cowrie/cowrie:latest
     container_name: cowrie
-    hostname: honeypot
     restart: unless-stopped
     ports:
       - "2222:2222"  # SSH honeypot
@@ -48,7 +47,7 @@ services:
 
   # VictoriaLogs - Log Storage Backend
   victorialogs:
-    image: victoriametrics/victoria-logs:v0.5.0-victorialogs
+    image: victoriametrics/victoria-logs:v1.45.0
     container_name: victorialogs
     restart: unless-stopped
     ports:
@@ -88,10 +87,10 @@ services:
       - GF_SECURITY_ADMIN_PASSWORD=admin
       - GF_USERS_ALLOW_SIGN_UP=false
       - GF_SERVER_ROOT_URL=http://localhost:3000
-      # Enable anonymous access for easy demo (disable in production)
       - GF_AUTH_ANONYMOUS_ENABLED=false
-      # Logging
       - GF_LOG_LEVEL=info
+      # Install VictoriaLogs plugin
+      - GF_INSTALL_PLUGINS=victoriametrics-logs-datasource
     networks:
       - monitoring
     depends_on:
