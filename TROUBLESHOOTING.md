@@ -2,7 +2,62 @@
 
 ## Common Issues and Solutions
 
-### 1. Services Not Starting
+### 1. JSON Decode Error / Missing cmdoutput.json
+
+**Problem**: Cowrie fails to start with error:
+```
+json.decoder.JSONDecodeError: Expecting value: line 1 column 3 (char 2)
+```
+or
+```
+FileNotFoundError: [Errno 2] No such file or directory: '/cowrie/cowrie-git/share/cowrie/cmdoutput.json'
+```
+
+**Root Cause**: 
+- Cowrie version 2.6.0+ moved data files from `share/cowrie` to `src/cowrie/data`
+- The configuration still references the old `share/cowrie` location
+- Required files (`cmdoutput.json`, `fs.pickle`) need to be copied to `share/cowrie`
+
+**Solution**:
+This project includes an entrypoint script (`cowrie-entrypoint.sh`) that automatically copies required data files on startup. The script:
+- Creates the `share/cowrie` directory structure
+- Copies `cmdoutput.json` from `src/cowrie/data` to `share/cowrie`
+- Copies `fs.pickle` for the filesystem
+- Copies `txtcmds` directory with command outputs
+- Only copies files if they don't exist or if the source is newer
+
+**Verification**:
+```bash
+# Check if files were copied correctly
+docker-compose exec cowrie ls -la /cowrie/cowrie-git/share/cowrie/
+
+# You should see:
+# - cmdoutput.json
+# - fs.pickle
+# - txtcmds/
+# - arch/ (if available)
+
+# Check entrypoint logs
+docker-compose logs cowrie | grep -A 20 "Initialization"
+```
+
+**Manual Fix** (if entrypoint doesn't work):
+```bash
+# Enter the container
+docker-compose exec cowrie bash
+
+# Copy required files manually
+mkdir -p /cowrie/cowrie-git/share/cowrie
+cp /cowrie/cowrie-git/src/cowrie/data/cmdoutput.json /cowrie/cowrie-git/share/cowrie/
+cp /cowrie/cowrie-git/src/cowrie/data/fs.pickle /cowrie/cowrie-git/share/cowrie/
+cp -r /cowrie/cowrie-git/src/cowrie/data/txtcmds /cowrie/cowrie-git/share/cowrie/
+
+# Restart container
+exit
+docker-compose restart cowrie
+```
+
+### 2. Services Not Starting
 
 **Problem**: `docker-compose up` fails or services keep restarting
 
@@ -21,7 +76,7 @@ netstat -tuln | grep -E '(2222|2223|3000|9428)'
 # If ports are in use, either stop the conflicting service or modify docker-compose.yml
 ```
 
-### 2. No Logs in Grafana
+### 3. No Logs in Grafana
 
 **Problem**: Grafana shows no data from Cowrie
 
@@ -42,7 +97,7 @@ curl http://localhost:9428/select/logsql/query -d 'query={job="cowrie"}'
 # Go to Grafana → Configuration → Data Sources → VictoriaLogs → Test
 ```
 
-### 3. Cowrie Container Exits Immediately
+### 4. Cowrie Container Exits Immediately
 
 **Problem**: Cowrie container starts but exits with error
 
@@ -64,7 +119,7 @@ docker-compose exec cowrie cat /cowrie/cowrie.cfg
 docker-compose exec cowrie ls -la /cowrie/var/log/
 ```
 
-### 4. Cannot Connect to Honeypot (Ports 2222/2223)
+### 5. Cannot Connect to Honeypot (Ports 2222/2223)
 
 **Problem**: SSH/Telnet connections to Cowrie fail
 
@@ -86,7 +141,7 @@ sudo ufw status
 sudo iptables -L -n | grep -E '(2222|2223)'
 ```
 
-### 5. Grafana Login Issues
+### 6. Grafana Login Issues
 
 **Problem**: Cannot log in to Grafana or forgot password
 
@@ -104,7 +159,7 @@ docker-compose exec grafana grafana-cli admin reset-admin-password newpassword
 docker-compose restart grafana
 ```
 
-### 6. VictoriaLogs Out of Disk Space
+### 7. VictoriaLogs Out of Disk Space
 
 **Problem**: VictoriaLogs fills up disk space
 
@@ -127,7 +182,7 @@ docker-compose exec victorialogs rm -rf /victoria-logs-data/data
 docker-compose restart victorialogs
 ```
 
-### 7. Promtail Not Parsing Logs Correctly
+### 8. Promtail Not Parsing Logs Correctly
 
 **Problem**: Logs appear in VictoriaLogs but fields aren't extracted
 
@@ -147,7 +202,7 @@ docker-compose exec cowrie tail -1 /cowrie/var/log/cowrie/cowrie.json | python3 
 docker-compose exec cowrie cat /cowrie/cowrie.cfg | grep -A5 output_jsonlog
 ```
 
-### 8. High CPU/Memory Usage
+### 9. High CPU/Memory Usage
 
 **Problem**: One or more containers using too many resources
 
@@ -169,7 +224,7 @@ docker stats
 docker-compose down && docker-compose up -d
 ```
 
-### 9. Network Connectivity Issues Between Containers
+### 10. Network Connectivity Issues Between Containers
 
 **Problem**: Services can't communicate with each other
 
@@ -190,7 +245,7 @@ docker network rm honeypot-monitoring
 docker-compose up -d
 ```
 
-### 10. Permission Denied Errors
+### 11. Permission Denied Errors
 
 **Problem**: Permission errors in logs
 
