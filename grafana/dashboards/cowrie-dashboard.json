@@ -1,146 +1,319 @@
 {
-  "uid": "cowrie-honeypot-uid",
-  "title": "Cowrie Honeypot Dashboard",
-  "tags": ["cowrie", "honeypot", "security"],
-  "timezone": "browser",
-  "schemaVersion": 38,
-  "version": 2,
-  "refresh": "30s",
+  "annotations": {
+    "list": [
+      {
+        "builtIn": 1,
+        "datasource": {
+          "type": "grafana",
+          "uid": "-- Grafana --"
+        },
+        "enable": true,
+        "hide": true,
+        "iconColor": "rgba(0, 211, 255, 1)",
+        "name": "Annotations & Alerts",
+        "type": "dashboard"
+      }
+    ]
+  },
+  "editable": true,
+  "fiscalYearStartMonth": 0,
+  "graphTooltip": 0,
+  "id": 6,
+  "links": [],
+  "liveNow": false,
   "panels": [
     {
+      "datasource": {
+        "type": "victoriametrics-logs-datasource",
+        "uid": "victorialogs-native-uid"
+      },
+      "fieldConfig": {
+        "defaults": {
+          "color": {
+            "mode": "thresholds"
+          },
+          "mappings": [],
+          "thresholds": {
+            "mode": "absolute",
+            "steps": [
+              {
+                "color": "blue",
+                "value": null
+              }
+            ]
+          }
+        },
+        "overrides": []
+      },
+      "gridPos": {
+        "h": 4,
+        "w": 6,
+        "x": 0,
+        "y": 0
+      },
       "id": 1,
-      "gridPos": {"h": 4, "w": 6, "x": 0, "y": 0},
-      "type": "stat",
-      "title": "Total Connections",
-      "datasource": {"type": "victoriametrics-logs-datasource", "uid": "victorialogs-native-uid"},
-      "targets": [
-        {
-          "expr": "job:cowrie eventid:cowrie.session.connect | stats count() as total",
-          "refId": "A"
-        }
-      ],
       "options": {
         "colorMode": "background",
         "graphMode": "none",
-        "textMode": "value_and_name"
+        "justifyMode": "auto",
+        "orientation": "auto",
+        "reduceOptions": {
+          "calcs": [
+            "lastNotNull"
+          ],
+          "fields": "",
+          "values": false
+        },
+        "textMode": "value_and_name",
+        "wideLayout": true
       },
-      "fieldConfig": {
-        "defaults": {
-          "color": {"mode": "thresholds"},
-          "thresholds": {
-            "mode": "absolute",
-            "steps": [
-              {"value": 0, "color": "blue"}
-            ]
-          }
-        }
-      }
-    },
-    {
-      "id": 2,
-      "gridPos": {"h": 4, "w": 6, "x": 6, "y": 0},
-      "type": "stat",
-      "title": "Failed Logins",
-      "datasource": {"type": "victoriametrics-logs-datasource", "uid": "victorialogs-native-uid"},
+      "pluginVersion": "10.2.3",
       "targets": [
         {
-          "expr": "job:cowrie eventid:cowrie.login.failed | stats count() as total",
+          "datasource": {
+            "type": "victoriametrics-logs-datasource",
+            "uid": "victorialogs-native-uid"
+          },
+          "editorMode": "code",
+          "expr": "{job=\"cowrie\"} eventid:cowrie.session.connect | stats by (src_ip) count() as connections",
+          "queryType": "statsRange",
           "refId": "A"
         }
       ],
-      "options": {
-        "colorMode": "background",
-        "graphMode": "none",
-        "textMode": "value_and_name"
+      "title": "Total Connections (by IP)",
+      "transformations": [
+        {
+          "id": "calculateField",
+          "options": {
+            "alias": "Total",
+            "mode": "reduceRow",
+            "reduce": {
+              "reducer": "count"
+            },
+            "replaceFields": true
+          }
+        }
+      ],
+      "type": "stat"
+    },
+    {
+      "datasource": {
+        "type": "victoriametrics-logs-datasource",
+        "uid": "victorialogs-native-uid"
       },
       "fieldConfig": {
         "defaults": {
-          "color": {"mode": "thresholds"},
+          "color": {
+            "mode": "thresholds"
+          },
+          "mappings": [],
           "thresholds": {
             "mode": "absolute",
             "steps": [
-              {"value": 0, "color": "red"}
+              {
+                "color": "green",
+                "value": null
+              }
             ]
           }
-        }
-      }
-    },
-    {
+        },
+        "overrides": []
+      },
+      "gridPos": {
+        "h": 4,
+        "w": 6,
+        "x": 6,
+        "y": 0
+      },
       "id": 3,
-      "gridPos": {"h": 4, "w": 6, "x": 12, "y": 0},
-      "type": "stat",
+      "options": {
+        "colorMode": "background",
+        "graphMode": "none",
+        "justifyMode": "auto",
+        "orientation": "auto",
+        "reduceOptions": {
+          "calcs": [
+            "sum"
+          ],
+          "fields": "",
+          "values": false
+        },
+        "textMode": "value_and_name",
+        "wideLayout": true
+      },
+      "pluginVersion": "10.2.3",
+      "targets": [
+        {
+          "datasource": {
+            "type": "victoriametrics-logs-datasource",
+            "uid": "victorialogs-native-uid"
+          },
+          "editorMode": "code",
+          "expr": "{job=\"cowrie\"} eventid:cowrie.login.success | stats count() as Total",
+          "queryType": "statsRange",
+          "refId": "A"
+        }
+      ],
       "title": "Successful Logins",
-      "datasource": {"type": "victoriametrics-logs-datasource", "uid": "victorialogs-native-uid"},
-      "targets": [
-        {
-          "expr": "job:cowrie eventid:cowrie.login.success | stats count() as total",
-          "refId": "A"
-        }
-      ],
-      "options": {
-        "colorMode": "background",
-        "graphMode": "none",
-        "textMode": "value_and_name"
+      "type": "stat"
+    },
+    {
+      "datasource": {
+        "type": "victoriametrics-logs-datasource",
+        "uid": "victorialogs-native-uid"
       },
       "fieldConfig": {
         "defaults": {
-          "color": {"mode": "thresholds"},
+          "color": {
+            "mode": "thresholds"
+          },
+          "mappings": [],
           "thresholds": {
             "mode": "absolute",
             "steps": [
-              {"value": 0, "color": "green"}
+              {
+                "color": "red",
+                "value": null
+              }
             ]
           }
+        },
+        "overrides": []
+      },
+      "gridPos": {
+        "h": 4,
+        "w": 6,
+        "x": 12,
+        "y": 0
+      },
+      "id": 2,
+      "options": {
+        "colorMode": "background",
+        "graphMode": "none",
+        "justifyMode": "auto",
+        "orientation": "auto",
+        "reduceOptions": {
+          "calcs": [
+            "sum"
+          ],
+          "fields": "",
+          "values": false
+        },
+        "textMode": "value_and_name",
+        "wideLayout": true
+      },
+      "pluginVersion": "10.2.3",
+      "targets": [
+        {
+          "datasource": {
+            "type": "victoriametrics-logs-datasource",
+            "uid": "victorialogs-native-uid"
+          },
+          "editorMode": "code",
+          "expr": "job:cowrie eventid:cowrie.login.failed | stats count() as Total",
+          "queryType": "statsRange",
+          "refId": "A"
         }
-      }
+      ],
+      "title": "Failed Logins",
+      "type": "stat"
     },
     {
+      "datasource": {
+        "type": "victoriametrics-logs-datasource",
+        "uid": "victorialogs-native-uid"
+      },
+      "fieldConfig": {
+        "defaults": {
+          "color": {
+            "mode": "thresholds"
+          },
+          "mappings": [],
+          "thresholds": {
+            "mode": "absolute",
+            "steps": [
+              {
+                "color": "orange",
+                "value": null
+              }
+            ]
+          }
+        },
+        "overrides": []
+      },
+      "gridPos": {
+        "h": 4,
+        "w": 6,
+        "x": 18,
+        "y": 0
+      },
       "id": 4,
-      "gridPos": {"h": 4, "w": 6, "x": 18, "y": 0},
-      "type": "stat",
-      "title": "Commands Executed",
-      "datasource": {"type": "victoriametrics-logs-datasource", "uid": "victorialogs-native-uid"},
-      "targets": [
-        {
-          "expr": "job:cowrie eventid:cowrie.command.input | stats count() as total",
-          "refId": "A"
-        }
-      ],
       "options": {
         "colorMode": "background",
         "graphMode": "none",
-        "textMode": "value_and_name"
+        "justifyMode": "auto",
+        "orientation": "auto",
+        "reduceOptions": {
+          "calcs": [
+            "sum"
+          ],
+          "fields": "",
+          "values": false
+        },
+        "textMode": "value_and_name",
+        "wideLayout": true
       },
-      "fieldConfig": {
-        "defaults": {
-          "color": {"mode": "thresholds"},
-          "thresholds": {
-            "mode": "absolute",
-            "steps": [
-              {"value": 0, "color": "orange"}
-            ]
-          }
-        }
-      }
-    },
-    {
-      "id": 5,
-      "gridPos": {"h": 8, "w": 12, "x": 0, "y": 4},
-      "type": "table",
-      "title": "Top Failed Login Attempts",
-      "datasource": {"type": "victoriametrics-logs-datasource", "uid": "victorialogs-native-uid"},
+      "pluginVersion": "10.2.3",
       "targets": [
         {
-          "expr": "job:cowrie eventid:cowrie.login.failed | stats by (username, password, src_ip) count() as attempts | sort by (attempts) desc | limit 15",
+          "datasource": {
+            "type": "victoriametrics-logs-datasource",
+            "uid": "victorialogs-native-uid"
+          },
+          "editorMode": "code",
+          "expr": "{job=\"cowrie\"} eventid:cowrie.command.input | stats count() as Total",
+          "queryType": "statsRange",
           "refId": "A"
         }
       ],
-      "options": {"showHeader": true},
+      "title": "Commands Executed",
+      "type": "stat"
+    },
+    {
+      "datasource": {
+        "type": "victoriametrics-logs-datasource",
+        "uid": "victorialogs-native-uid"
+      },
       "fieldConfig": {
-        "defaults": {},
+        "defaults": {
+          "custom": {
+            "align": "auto",
+            "cellOptions": {
+              "type": "auto"
+            },
+            "inspect": false
+          },
+          "mappings": [],
+          "thresholds": {
+            "mode": "absolute",
+            "steps": [
+              {
+                "color": "green",
+                "value": null
+              },
+              {
+                "color": "red",
+                "value": 80
+              }
+            ]
+          }
+        },
         "overrides": [
           {
-            "matcher": {"id": "byName", "options": "attempts"},
+            "matcher": {
+              "id": "byName",
+              "options": "logins"
+            },
             "properties": [
               {
                 "id": "custom.width",
@@ -149,26 +322,100 @@
             ]
           }
         ]
-      }
-    },
-    {
+      },
+      "gridPos": {
+        "h": 8,
+        "w": 12,
+        "x": 0,
+        "y": 4
+      },
       "id": 6,
-      "gridPos": {"h": 8, "w": 12, "x": 12, "y": 4},
-      "type": "table",
-      "title": "Successful Logins (Breaches!)",
-      "datasource": {"type": "victoriametrics-logs-datasource", "uid": "victorialogs-native-uid"},
+      "options": {
+        "cellHeight": "sm",
+        "footer": {
+          "countRows": false,
+          "fields": "",
+          "reducer": [
+            "sum"
+          ],
+          "show": false
+        },
+        "showHeader": true
+      },
+      "pluginVersion": "10.2.3",
       "targets": [
         {
           "expr": "job:cowrie eventid:cowrie.login.success | stats by (username, password, src_ip) count() as logins | sort by (logins) desc | limit 15",
           "refId": "A"
         }
       ],
-      "options": {"showHeader": true},
+      "title": "Top Successful Logins",
+      "transformations": [
+        {
+          "id": "extractFields",
+          "options": {
+            "format": "json",
+            "jsonPaths": [
+              {
+                "alias": "Logins",
+                "path": "logins"
+              },
+              {
+                "alias": "Username",
+                "path": "username"
+              },
+              {
+                "alias": "Password",
+                "path": "password"
+              },
+              {
+                "alias": "Source IP",
+                "path": "src_ip"
+              }
+            ],
+            "keepTime": false,
+            "replace": true,
+            "source": "labels"
+          }
+        }
+      ],
+      "type": "table"
+    },
+    {
+      "datasource": {
+        "type": "victoriametrics-logs-datasource",
+        "uid": "victorialogs-native-uid"
+      },
       "fieldConfig": {
-        "defaults": {},
+        "defaults": {
+          "custom": {
+            "align": "auto",
+            "cellOptions": {
+              "type": "auto"
+            },
+            "inspect": false
+          },
+          "mappings": [],
+          "thresholds": {
+            "mode": "absolute",
+            "steps": [
+              {
+                "color": "green",
+                "value": null
+              },
+              {
+                "color": "red",
+                "value": 80
+              }
+            ]
+          }
+        },
         "overrides": [
           {
-            "matcher": {"id": "byName", "options": "logins"},
+            "matcher": {
+              "id": "byName",
+              "options": "attempts"
+            },
             "properties": [
               {
                 "id": "custom.width",
@@ -177,54 +424,281 @@
             ]
           }
         ]
-      }
+      },
+      "gridPos": {
+        "h": 8,
+        "w": 12,
+        "x": 12,
+        "y": 4
+      },
+      "id": 5,
+      "options": {
+        "cellHeight": "sm",
+        "footer": {
+          "countRows": false,
+          "fields": "",
+          "reducer": [
+            "sum"
+          ],
+          "show": false
+        },
+        "showHeader": true
+      },
+      "pluginVersion": "10.2.3",
+      "targets": [
+        {
+          "expr": "job:cowrie eventid:cowrie.login.failed | stats by (username, password, src_ip) count() as attempts | sort by (attempts) desc | limit 15",
+          "refId": "A"
+        }
+      ],
+      "title": "Top Failed Login Attempts",
+      "transformations": [
+        {
+          "id": "extractFields",
+          "options": {
+            "format": "json",
+            "jsonPaths": [
+              {
+                "alias": "Logins",
+                "path": "attempts"
+              },
+              {
+                "alias": "Username",
+                "path": "username"
+              },
+              {
+                "alias": "Password",
+                "path": "password"
+              },
+              {
+                "alias": "Source IP",
+                "path": "src_ip"
+              }
+            ],
+            "keepTime": false,
+            "replace": true,
+            "source": "labels"
+          }
+        }
+      ],
+      "type": "table"
     },
     {
+      "datasource": {
+        "type": "victoriametrics-logs-datasource",
+        "uid": "victorialogs-native-uid"
+      },
+      "fieldConfig": {
+        "defaults": {
+          "custom": {
+            "align": "auto",
+            "cellOptions": {
+              "type": "auto"
+            },
+            "inspect": false
+          },
+          "mappings": [],
+          "thresholds": {
+            "mode": "absolute",
+            "steps": [
+              {
+                "color": "green",
+                "value": null
+              },
+              {
+                "color": "red",
+                "value": 80
+              }
+            ]
+          }
+        },
+        "overrides": []
+      },
+      "gridPos": {
+        "h": 8,
+        "w": 12,
+        "x": 0,
+        "y": 12
+      },
       "id": 7,
-      "gridPos": {"h": 8, "w": 12, "x": 0, "y": 12},
-      "type": "table",
-      "title": "Top Attackers (by IP)",
-      "datasource": {"type": "victoriametrics-logs-datasource", "uid": "victorialogs-native-uid"},
+      "options": {
+        "cellHeight": "sm",
+        "footer": {
+          "countRows": false,
+          "fields": "",
+          "reducer": [
+            "sum"
+          ],
+          "show": false
+        },
+        "showHeader": true
+      },
+      "pluginVersion": "10.2.3",
       "targets": [
         {
           "expr": "job:cowrie eventid:cowrie.session.connect | stats by (src_ip) count() as connections | sort by (connections) desc | limit 10",
           "refId": "A"
         }
       ],
-      "options": {"showHeader": true}
+      "title": "Top Attackers (by IP)",
+      "transformations": [
+        {
+          "id": "extractFields",
+          "options": {
+            "format": "json",
+            "jsonPaths": [
+              {
+                "alias": "Total Connections",
+                "path": "connections"
+              },
+              {
+                "alias": "Source IP",
+                "path": "src_ip"
+              }
+            ],
+            "keepTime": false,
+            "replace": true,
+            "source": "labels"
+          }
+        }
+      ],
+      "type": "table"
     },
     {
+      "datasource": {
+        "type": "victoriametrics-logs-datasource",
+        "uid": "victorialogs-native-uid"
+      },
+      "fieldConfig": {
+        "defaults": {
+          "custom": {
+            "align": "auto",
+            "cellOptions": {
+              "type": "auto"
+            },
+            "inspect": false
+          },
+          "mappings": [],
+          "thresholds": {
+            "mode": "absolute",
+            "steps": [
+              {
+                "color": "green",
+                "value": null
+              },
+              {
+                "color": "red",
+                "value": 80
+              }
+            ]
+          }
+        },
+        "overrides": []
+      },
+      "gridPos": {
+        "h": 8,
+        "w": 12,
+        "x": 12,
+        "y": 12
+      },
       "id": 8,
-      "gridPos": {"h": 8, "w": 12, "x": 12, "y": 12},
-      "type": "table",
-      "title": "Commands Executed",
-      "datasource": {"type": "victoriametrics-logs-datasource", "uid": "victorialogs-native-uid"},
+      "options": {
+        "cellHeight": "sm",
+        "footer": {
+          "countRows": false,
+          "fields": "",
+          "reducer": [
+            "sum"
+          ],
+          "show": false
+        },
+        "showHeader": true
+      },
+      "pluginVersion": "10.2.3",
       "targets": [
         {
           "expr": "job:cowrie eventid:cowrie.command.input | stats by (input, src_ip) count() as times | sort by (times) desc | limit 15",
           "refId": "A"
         }
       ],
-      "options": {"showHeader": true}
+      "title": "Commands Executed",
+      "transformations": [
+        {
+          "id": "extractFields",
+          "options": {
+            "format": "json",
+            "jsonPaths": [
+              {
+                "alias": "Command",
+                "path": "input"
+              },
+              {
+                "alias": "Source IP",
+                "path": "src_ip"
+              },
+              {
+                "alias": "Times",
+                "path": "times"
+              }
+            ],
+            "keepTime": false,
+            "replace": true,
+            "source": "labels"
+          }
+        }
+      ],
+      "type": "table"
     },
     {
+      "datasource": {
+        "type": "victoriametrics-logs-datasource",
+        "uid": "victorialogs-native-uid"
+      },
+      "gridPos": {
+        "h": 12,
+        "w": 24,
+        "x": 0,
+        "y": 20
+      },
       "id": 9,
-      "gridPos": {"h": 12, "w": 24, "x": 0, "y": 20},
-      "type": "logs",
-      "title": "Live Honeypot Events",
-      "datasource": {"type": "victoriametrics-logs-datasource", "uid": "victorialogs-native-uid"},
+      "options": {
+        "dedupStrategy": "none",
+        "enableLogDetails": true,
+        "prettifyLogMessage": false,
+        "showCommonLabels": false,
+        "showLabels": false,
+        "showTime": true,
+        "sortOrder": "Descending",
+        "wrapLogMessage": true
+      },
       "targets": [
         {
           "expr": "job:cowrie",
           "refId": "A"
         }
       ],
-      "options": {
-        "showTime": true,
-        "wrapLogMessage": true,
-        "enableLogDetails": true,
-        "sortOrder": "Descending"
-      }
+      "title": "Live Honeypot Events",
+      "type": "logs"
     }
-  ]
+  ],
+  "refresh": "",
+  "schemaVersion": 39,
+  "tags": [
+    "cowrie",
+    "security",
+    "Honeypot"
+  ],
+  "templating": {
+    "list": []
+  },
+  "time": {
+    "from": "now-30m",
+    "to": "now"
+  },
+  "timepicker": {},
+  "timezone": "browser",
+  "title": "Cowrie Honeypot Dashboard Finalizado",
+  "uid": "acfd3ee4-9e62-4ea9-b4a4-eb2b46671602",
+  "version": 7,
+  "weekStart": ""
 }

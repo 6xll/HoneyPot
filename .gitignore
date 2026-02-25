@@ -51,3 +51,14 @@ Thumbs.db
 
 # Grafana runtime
 grafana/grafana.db
+
+# Backup files
+*.backup
+
+# Cowrie files
+fs.pickle
+*.pickle
+
+# Temporary files
+*.txt
+ps_output.txt
