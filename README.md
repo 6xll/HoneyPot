@@ -39,7 +39,7 @@ This project uses Docker Compose to orchestrate a complete security monitoring s
 
 ## Components
 
-- **Cowrie**: SSH/Telnet honeypot that logs attacker activities in JSON format
+- **Cowrie**: SSH/Telnet honeypot that logs attacker activities in JSON format (source included in `cowrie/`)
 - **Promtail**: Log scraper that collects and forwards Cowrie logs
 - **VictoriaLogs**: Fast, cost-effective log storage backend
 - **Grafana**: Visualization and dashboarding platform
@@ -53,48 +53,33 @@ This project uses Docker Compose to orchestrate a complete security monitoring s
 
 ## Quick Start
 
-### Step 1: Copy Cowrie Source Code
-
-Instead of using Cowrie as a git submodule, we'll copy it directly into our repository:
-
-```bash
-# Clone Cowrie repository temporarily
-git clone https://github.com/cowrie/cowrie.git /tmp/cowrie-temp
-
-# Copy Cowrie source into your project
-cp -r /tmp/cowrie-temp/* ./cowrie/
-
-# Clean up temporary clone
-rm -rf /tmp/cowrie-temp
-
-# Add Cowrie to your repository
-git add cowrie/
-git commit -m "Add Cowrie honeypot source code"
-```
-
-**Note**: This approach gives you full control over Cowrie's version in your repository. You can update it manually when needed without dealing with submodule complexities.
-
-### Step 2: Start the Stack
+### Step 1: Start the Stack
 
 ```bash
 # Start all services
-docker-compose up -d
+docker compose up -d
 
 # View logs
-docker-compose logs -f
+docker compose logs -f
 
 # Check service health
-docker-compose ps
+docker compose ps
 ```
 
-### Step 3: Access Services
+Alternatively, use the interactive management script:
+
+```bash
+bash start.sh
+```
+
+### Step 2: Access Services
 
 - **Grafana**: http://localhost:3000 (default credentials: admin/admin)
 - **Cowrie SSH**: Port 2222 (honeypot endpoint)
 - **Cowrie Telnet**: Port 2223 (honeypot endpoint)
 - **VictoriaLogs**: http://localhost:9428
 
-### Step 4: Configure Grafana
+### Step 3: Configure Grafana
 
 1. Log in to Grafana at http://localhost:3000
 2. The VictoriaLogs datasource is automatically provisioned
@@ -105,7 +90,7 @@ docker-compose ps
 
 ### Cowrie Configuration
 
-Cowrie is configured via `cowrie/cowrie.cfg`:
+Cowrie is configured via `cowrie-config/cowrie.cfg`:
 - JSON logging enabled
 - Logs stored in `/cowrie/var/log/cowrie/cowrie.json`
 - SSH on port 2222, Telnet on port 2223
@@ -144,34 +129,65 @@ Once data is flowing, you can use these LogQL queries in Grafana:
 sum by (src_ip) (count_over_time({job="cowrie"} | json [5m]))
 ```
 
+## File Structure
+
+```
+HoneyPot/
+├── cowrie/                          # Cowrie honeypot source code
+│   ├── bin/
+│   ├── src/
+│   ├── docs/
+│   └── ...
+├── cowrie-config/
+│   └── cowrie.cfg                   # Cowrie configuration
+├── grafana/
+│   ├── dashboards/
+│   │   └── cowrie-overview.json     # Pre-built dashboard
+│   └── provisioning/
+│       ├── datasources/
+│       │   └── victorialogs.yaml    # Datasource config
+│       └── dashboards/
+│           └── dashboards.yaml      # Dashboard provisioning
+├── docker-compose.yml               # Main orchestration
+├── promtail-config.yaml             # Log collection config
+├── start.sh                         # Interactive management script
+├── create_fs.py                     # Utility: create minimal fake filesystem
+├── create_proper_fs.py              # Utility: create filesystem via Cowrie classes
+├── README.md                        # This file
+├── SETUP.md                         # Cowrie setup / update instructions
+├── TESTING.md                       # Testing and verification guide
+├── TROUBLESHOOTING.md               # Common issues and solutions
+└── .gitignore                       # Git ignore patterns
+```
+
 ## Maintenance
 
 ### View Logs
 ```bash
 # All services
-docker-compose logs -f
+docker compose logs -f
 
 # Specific service
-docker-compose logs -f cowrie
-docker-compose logs -f promtail
+docker compose logs -f cowrie
+docker compose logs -f promtail
 ```
 
 ### Restart Services
 ```bash
 # Restart all
-docker-compose restart
+docker compose restart
 
 # Restart specific service
-docker-compose restart cowrie
+docker compose restart cowrie
 ```
 
 ### Stop and Clean Up
 ```bash
 # Stop services
-docker-compose down
+docker compose down
 
 # Stop and remove volumes (⚠️ deletes all logs)
-docker-compose down -v
+docker compose down -v
 ```
 
 ## Security Considerations
@@ -187,19 +203,19 @@ docker-compose down -v
 ### Cowrie not starting
 ```bash
 # Check Cowrie logs
-docker-compose logs cowrie
+docker compose logs cowrie
 
 # Verify configuration
-docker-compose exec cowrie cat /cowrie/cowrie.cfg
+docker compose exec cowrie cat /cowrie/cowrie.cfg
 ```
 
 ### No logs in Grafana
 ```bash
 # Check Promtail is running
-docker-compose logs promtail
+docker compose logs promtail
 
 # Verify log file exists
-docker-compose exec cowrie ls -la /cowrie/var/log/cowrie/
+docker compose exec cowrie ls -la /cowrie/var/log/cowrie/
 
 # Check VictoriaLogs
 curl http://localhost:9428/select/logsql/query -d 'query={job="cowrie"}'
