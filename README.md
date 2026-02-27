@@ -1,3 +1,5 @@
+<img width="539" height="497" alt="HONEYPOT-Photoroom" src="https://github.com/user-attachments/assets/86ea3131-21a0-4274-bccc-2a03d65d7f37" />
+
 # HoneyPot Security Monitoring Project
 
 A comprehensive security monitoring solution integrating Cowrie honeypot with a modern observability stack.
