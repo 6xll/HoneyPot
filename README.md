@@ -1,5 +1,4 @@
-<img width="539" height="497" alt="o" src="https://github.com/user-attachments/assets/bc139aa9-ce60-41eb-97b2-57aaed84a054"
-       text-align: center;/>
+<img width="539" height="497" alt="o" src="https://github.com/user-attachments/assets/bc139aa9-ce60-41eb-97b2-57aaed84a054"/>
 
 # HoneyPot Security Monitoring Project
 
